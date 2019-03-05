@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math"
 	"os"
@@ -13,6 +12,7 @@ type Timer struct {
 	Started  time.Time
 	Border   string
 	Duration time.Duration
+	Beep bool
 }
 
 var black = "\u001b[30m"
@@ -50,32 +50,17 @@ func main() {
 		d, err := time.ParseDuration(os.Args[1])
 		if err == nil {
 			t.Duration = d
-
 		}
 	}
 
 	t.Reset()
-	go func() {
-		t.InitBorder(width)
-		t.Start()
-	}()
-
-	stdin := bufio.NewScanner(os.Stdin)
-	for stdin.Scan() {
-		text := stdin.Text()
-		switch text {
-		case " ":
-			// toggle pause
-
-		case "r", "R":
-			// reset timer
-		}
-	}
-
+	t.InitBorder(width)
+	t.Start()
 }
 
 func (t *Timer) Reset() {
 	t.Started = time.Now()
+	t.Beep = false
 }
 
 func (t *Timer) Start() {
@@ -109,7 +94,12 @@ func (t *Timer) Render() {
 		diffAbs := time.Duration(math.Abs(float64(diffTime)))
 		if diffTime > 0 {
 			numColor = red
+			if !t.Beep {
+				fmt.Print("\a")
+				t.Beep = true
+			}
 		}
+
 		h = int64(diffAbs.Hours())
 		m = int64(diffAbs.Minutes()) % 60
 		s = int64(diffAbs.Seconds()) % 60
