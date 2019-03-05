@@ -1,0 +1,18 @@
+### https://raw.github.com/github/gitignore/cfd32d9174496f7d6d54a43929973e6a8d4deb6e/Go.gitignore
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, build with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# IntelliJ IDEA
+.idea/
+*.iml
