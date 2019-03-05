@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"strconv"
 	"time"
 )
 
 type Timer struct {
 	Started  time.Time
-	Border   string
 	Duration time.Duration
-	Beep bool
+	Beep     bool
 }
 
 var black = "\u001b[30m"
@@ -39,8 +37,6 @@ var clean = "\u001b[K"
 
 var rendered = false
 
-var width = 30
-
 func main() {
 	t := Timer{}
 
@@ -54,7 +50,6 @@ func main() {
 	}
 
 	t.Reset()
-	t.InitBorder(width)
 	t.Start()
 }
 
@@ -67,13 +62,6 @@ func (t *Timer) Start() {
 	for {
 		t.Render()
 		time.Sleep(1 * time.Second)
-	}
-}
-
-func (t *Timer) InitBorder(w int) {
-	t.Border = ""
-	for i := 0; i < w; i++ {
-		t.Border += "━"
 	}
 }
 
@@ -112,32 +100,40 @@ func (t *Timer) Render() {
 
 	// reset cursor
 	if rendered {
-		fmt.Printf("\u001b[7A")
+		// up 7
+		fmt.Printf("\u001b[5A")
 	} else {
 		rendered = true
 	}
 
-	fmt.Printf(clean+"\r%s\n", t.Border)
-	fmt.Printf(clean + "  " + target + "\n")
-	fmt.Printf(clean + "\n")
-	fmt.Printf(clean+numColor+"           %02d:%02d:%02d\n"+reset, h, m, s)
-	fmt.Printf(clean + "\n")
-	fmt.Printf(clean + "\n")
-	fmt.Printf(clean+"%s\n"+clean, t.Border)
+	RenderBorder()
 
-	right := "\u001b[" + strconv.Itoa(width) + "G"
-	left := "\u001b[1G"
-	up := "\u001b[1A" + left
-	down := "\u001b[1B" + right
-	v := "┃"
-	fmt.Printf(up + "┗")
-	for i := 0; i <= 4; i++ {
-		fmt.Printf(up + v)
-	}
-	fmt.Printf(up + "┏" + right + "┓" + down)
-	for i := 0; i <= 4; i++ {
-		fmt.Printf(v + down)
-	}
-	fmt.Printf("┛" + down + left)
+	RenderTargetTime(target)
 
+	// render time
+	// up 3
+	fmt.Print("\u001b[3A", "\u001b[12G")
+	// render number
+	fmt.Print(numColor, fmt.Sprintf("%02d:%02d:%02d", h, m, s), reset)
+	// down 3
+	fmt.Print("\u001b[3B", "\u001b[1G")
+
+}
+
+func RenderTargetTime(target string) {
+	// up 3
+	fmt.Print("\u001b[4A")
+	// render number
+	fmt.Print("\u001b[3G", target)
+	// down 3
+	fmt.Print("\u001b[4B", "\u001b[1G")
+}
+
+func RenderBorder() {
+	nl := "\n"
+	fmt.Print(clean, "╭────────────────────────────╮", nl)
+	fmt.Print(clean, "│                            │", nl)
+	fmt.Print(clean, "│                            │", nl)
+	fmt.Print(clean, "│                            │", nl)
+	fmt.Print(clean, "╰────────────────────────────╯", nl)
 }
