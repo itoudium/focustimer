@@ -37,7 +37,6 @@ var reset = "\u001b[0m"
 var clean = "\u001b[K"
 
 var spinner = []string{"◜", "◝", "◞", "◟"}
-var spinnerIndex = 0
 
 var rendered = false
 
@@ -66,21 +65,28 @@ func (t *Timer) Reset() {
 
 func (t *Timer) Start() {
 	go func() {
+		// spinner rendering routine
 		for {
-			time.Sleep(200 * time.Millisecond)
-			RenderSpinner()
+			func() {
+				mu.Lock()
+				defer mu.Unlock()
+				t.RenderSpinner()
+			}()
+			time.Sleep(250 * time.Millisecond)
 		}
 	}()
+	// main
 	for {
-		t.Render()
+		func() {
+			mu.Lock()
+			defer mu.Unlock()
+			t.Render()
+		}()
 		time.Sleep(1 * time.Second)
 	}
 }
 
 func (t *Timer) Render() {
-	mu.Lock()
-	defer mu.Unlock()
-
 	var h, m, s int64
 	numColor := cyan
 	bgColor := ""
@@ -122,8 +128,8 @@ func (t *Timer) Render() {
 	}
 
 	RenderBorder()
-
 	RenderTargetTime(target)
+	t.RenderSpinner()
 
 	// render time
 	// up 3
@@ -157,18 +163,16 @@ func RenderBorder() {
 	fmt.Print(clean, "            ╰────────────────╯", nl)
 }
 
-func RenderSpinner() {
-	mu.Lock()
-	defer mu.Unlock()
+func (t *Timer) RenderSpinner() {
+
+	now := time.Now()
+	d := now.Sub(t.Started)
+	spinnerIndex := int(d.Seconds()/0.25) % len(spinner)
+
 	// up
 	fmt.Print("\u001b[5A")
 	// render number
 	fmt.Print("\u001b[16G", spinner[spinnerIndex])
 	// down
 	fmt.Print("\u001b[5B", "\u001b[1G")
-
-	spinnerIndex++
-	if spinnerIndex >= len(spinner) {
-		spinnerIndex = 0
-	}
 }
