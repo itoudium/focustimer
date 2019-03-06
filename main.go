@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -40,6 +41,8 @@ var spinnerIndex = 0
 
 var rendered = false
 
+var mu sync.Mutex
+
 func main() {
 	t := Timer{}
 
@@ -75,6 +78,8 @@ func (t *Timer) Start() {
 }
 
 func (t *Timer) Render() {
+	mu.Lock()
+	defer mu.Unlock()
 
 	var h, m, s int64
 	numColor := cyan
@@ -153,6 +158,8 @@ func RenderBorder() {
 }
 
 func RenderSpinner() {
+	mu.Lock()
+	defer mu.Unlock()
 	// up
 	fmt.Print("\u001b[5A")
 	// render number
