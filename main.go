@@ -35,6 +35,9 @@ var bold = "\u001b[1m"
 var reset = "\u001b[0m"
 var clean = "\u001b[K"
 
+var spinner = []string{"◜", "◝", "◞", "◟"}
+var spinnerIndex = 0
+
 var rendered = false
 
 func main() {
@@ -59,6 +62,12 @@ func (t *Timer) Reset() {
 }
 
 func (t *Timer) Start() {
+	go func() {
+		for {
+			time.Sleep(200 * time.Millisecond)
+			RenderSpinner()
+		}
+	}()
 	for {
 		t.Render()
 		time.Sleep(1 * time.Second)
@@ -69,6 +78,7 @@ func (t *Timer) Render() {
 
 	var h, m, s int64
 	numColor := cyan
+	bgColor := ""
 	target := ""
 
 	if t.Duration == 0 {
@@ -81,7 +91,8 @@ func (t *Timer) Render() {
 		diffTime := time.Since(x)
 		diffAbs := time.Duration(math.Abs(float64(diffTime)))
 		if diffTime > 0 {
-			numColor = red
+			numColor = black
+			bgColor = bgRed
 			if !t.Beep {
 				fmt.Print("\a")
 				t.Beep = true
@@ -100,8 +111,7 @@ func (t *Timer) Render() {
 
 	// reset cursor
 	if rendered {
-		// up 7
-		fmt.Printf("\u001b[5A")
+		fmt.Printf("\u001b[9A")
 	} else {
 		rendered = true
 	}
@@ -112,28 +122,46 @@ func (t *Timer) Render() {
 
 	// render time
 	// up 3
-	fmt.Print("\u001b[3A", "\u001b[12G")
+	fmt.Print("\u001b[5A", "\u001b[18G")
 	// render number
-	fmt.Print(numColor, fmt.Sprintf("%02d:%02d:%02d", h, m, s), reset)
+	fmt.Print(numColor, bgColor, fmt.Sprintf("%02d:%02d:%02d", h, m, s), reset)
 	// down 3
-	fmt.Print("\u001b[3B", "\u001b[1G")
+	fmt.Print("\u001b[5B", "\u001b[1G")
 
 }
 
 func RenderTargetTime(target string) {
-	// up 3
-	fmt.Print("\u001b[4A")
+	// up
+	fmt.Print("\u001b[2A")
 	// render number
-	fmt.Print("\u001b[3G", target)
-	// down 3
-	fmt.Print("\u001b[4B", "\u001b[1G")
+	fmt.Print("\u001b[18G", target)
+	// down
+	fmt.Print("\u001b[2B", "\u001b[1G")
 }
 
 func RenderBorder() {
 	nl := "\n"
-	fmt.Print(clean, "╭────────────────────────────╮", nl)
-	fmt.Print(clean, "│                            │", nl)
-	fmt.Print(clean, "│                            │", nl)
-	fmt.Print(clean, "│                            │", nl)
-	fmt.Print(clean, "╰────────────────────────────╯", nl)
+	fmt.Print(clean, "            ╭────────────────╮", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            │                │", nl)
+	fmt.Print(clean, "            ╰────────────────╯", nl)
+}
+
+func RenderSpinner() {
+	// up
+	fmt.Print("\u001b[5A")
+	// render number
+	fmt.Print("\u001b[16G", spinner[spinnerIndex])
+	// down
+	fmt.Print("\u001b[5B", "\u001b[1G")
+
+	spinnerIndex++
+	if spinnerIndex >= len(spinner) {
+		spinnerIndex = 0
+	}
 }
